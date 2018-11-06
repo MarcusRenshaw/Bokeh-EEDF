@@ -1,0 +1,59 @@
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import pandas as pd
+from bokeh.io import output_notebook
+from bokeh.io import show
+from bokeh.plotting import figure
+from ipywidgets import interact
+from bokeh.io import push_notebook
+from bokeh.models import Select
+from bokeh.layouts import widgetbox
+from bokeh.plotting import curdoc
+
+eedf_data = pd.read_csv('eedf_values.csv')
+
+energy_data = pd.read_csv('energy_values.csv')
+
+output_notebook()
+
+PLOT_OPTS = dict(
+    x_axis_type='log', y_axis_type='log',x_range=(1*10**-1,3*10**2),y_range=(1*10**-10,5*10**0),
+
+    x_axis_label = "Energy (eV)",
+    y_axis_label = "EEDF (ev^-3/2)"   
+)
+
+from bokeh.models import ColumnDataSource
+source = ColumnDataSource(dict(
+    x = energy_data.iloc[:,0],
+    y = eedf_data.iloc[:,0]
+    
+    ))
+from bokeh.models import HoverTool
+hover = HoverTool(tooltips='@x')
+p = figure(tools=[hover],**PLOT_OPTS)
+p.circle(x= energy_data.iloc[:,1], y=eedf_data.iloc[:,1],color="red")
+p.circle(x='x',y='y',source=source)
+show(p, notebook_handle=True)
+
+def update(humidity,oxygen):
+
+    
+    g = 10*oxygen*25+(10*humidity+1)
+    
+    
+    g=int(g)
+    print (g)
+
+    new_data = dict(
+        x = energy_data.iloc[:,g],
+        y = eedf_data.iloc[:,g]
+    )
+    
+    
+    source.data = new_data
+    push_notebook()
+
+interact(update,
+         humidity=(0., 2.401,0.1),oxygen=(0.,2.401,0.1))
